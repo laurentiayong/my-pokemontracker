@@ -346,7 +346,7 @@ header{position:sticky;top:0;z-index:50;background:rgba(12,14,19,0.92);backdrop-
 
 <div id="load-banner">
   <div class="spin"></div>
-  <span id="load-msg">Fetching card images from TCGdex…</span>
+  <span id="load-msg">Loading card images…</span>
   <span id="load-prog"></span>
 </div>
 <div class="progress-strip">
@@ -451,31 +451,13 @@ function save(){try{localStorage.setItem('sv2a_v5',JSON.stringify([...owned]));}
 function load(){try{const d=localStorage.getItem('sv2a_v5');if(d)owned=new Set(JSON.parse(d));}catch(e){}}
 
 async function fetchImages(){
-  const banner=document.getElementById('load-banner');
-  const msg=document.getElementById('load-msg');
-  const prog=document.getElementById('load-prog');
-  try{
-    const res=await fetch('https://api.tcgdex.net/v2/ja/sets/sv2a');
-    if(!res.ok)throw new Error('API error '+res.status);
-    const data=await res.json();
-    const cards=data.cards||[];
-    msg.textContent='Loading '+cards.length+' images\u2026';
-    cards.forEach((c,i)=>{
-      prog.textContent=(i+1)+'/'+cards.length;
-      if(c.image){
-        const id=parseInt(c.localId,10);
-        if(!isNaN(id)) IMG[id]=c.image+'/high.webp';
-      }
-    });
-    banner.classList.add('done');
-    render();
-  }catch(e){
-    // Fallback: build URLs directly
-    msg.textContent='Using fallback image URLs\u2026';
-    CARDS.forEach(c=>{IMG[c.n]='https://assets.tcgdex.net/ja/sv2a/'+c.n+'/high.webp';});
-    setTimeout(()=>banner.classList.add('done'),1200);
-    render();
-  }
+  // Confirmed working URL pattern - source: limitlesstcg.com
+  // Format: https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpc/SV2a/SV2a_{n}_R_JP_SM.png
+  const BASE = 'https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpc/SV2a/SV2a_';
+  const SUFFIX = '_R_JP_SM.png';
+  CARDS.forEach(c => { IMG[c.n] = BASE + c.n + SUFFIX; });
+  document.getElementById('load-banner').classList.add('done');
+  render();
 }
 
 function toggle(n){
